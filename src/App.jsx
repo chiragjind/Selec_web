@@ -9,6 +9,9 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 import Inventory from './pages/Inventory';
+import ForgotPassword from "./components/Auth/ForgotPassword";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ResetPassword from "./components/Auth/ResetPassword";
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -30,43 +33,63 @@ const App = () => {
     localStorage.removeItem('isLoggedIn');
   };
 
- const handleRegister = (userData) => {
-  const existingUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
-  
-  // Optional: prevent duplicate email registration
-  const alreadyExists = existingUsers.find(user => user.email === userData.email);
-  if (alreadyExists) {
-    alert("User with this email already exists.");
-    return;
-  }
-
-  existingUsers.push(userData);
-  localStorage.setItem("registeredUsers", JSON.stringify(existingUsers));
-  setShowRegister(false);
-};
-
-
-  if (!isLoggedIn && showRegister) {
-    return <RegisterForm onRegister={handleRegister} onBackToLogin={() => setShowRegister(false)} />;
-  }
-
-  if (!isLoggedIn) {
-    return <LoginForm onLogin={handleLogin} onShowRegister={() => setShowRegister(true)} />;
-  }
+  const handleRegister = (userData) => {
+    const existingUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
+    const alreadyExists = existingUsers.find(user => user.email === userData.email);
+    if (alreadyExists) {
+      alert("User with this email already exists.");
+      return;
+    }
+    existingUsers.push(userData);
+    localStorage.setItem("registeredUsers", JSON.stringify(existingUsers));
+    setShowRegister(false);
+  };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <Sidebar setCurrentView={setCurrentView} currentView={currentView} onLogout={handleLogout} />
-      <div className="flex-1 p-6">
-        {currentView === 'dashboard' && <Dashboard />}
-        {currentView === 'plant' && <Plant />}
-        {currentView === 'alerts' && <Alerts />}
-        {currentView === 'reports' && <Reports />}
-        {currentView === 'settings' && <Settings />}
-        {currentView === 'profile' && <Profile />}
-        {currentView === 'inventory' && <Inventory />}
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        {/* Forgot Password route */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
+        {/* Show Register Page if not logged in and user clicks "Register" */}
+        {!isLoggedIn && showRegister && (
+          <Route
+            path="*"
+            element={<RegisterForm onRegister={handleRegister} onBackToLogin={() => setShowRegister(false)} />}
+          />
+        )}
+
+        {/* Show Login Page if not logged in */}
+        {!isLoggedIn && !showRegister && (
+          <Route
+            path="*"
+            element={<LoginForm onLogin={handleLogin} onShowRegister={() => setShowRegister(true)} />}
+          />
+        )}
+
+        {/* Show Dashboard if logged in */}
+        {isLoggedIn && (
+          <Route
+            path="*"
+            element={
+              <div className="flex min-h-screen bg-gray-100">
+                <Sidebar setCurrentView={setCurrentView} currentView={currentView} onLogout={handleLogout} />
+                <div className="flex-1 p-6">
+                  {currentView === 'dashboard' && <Dashboard />}
+                  {currentView === 'plant' && <Plant />}
+                  {currentView === 'alerts' && <Alerts />}
+                  {currentView === 'reports' && <Reports />}
+                  {currentView === 'settings' && <Settings />}
+                  {currentView === 'profile' && <Profile />}
+                  {currentView === 'inventory' && <Inventory />}
+                </div>
+              </div>
+            }
+          />
+        )}
+      </Routes>
+    </Router>
   );
 };
 
